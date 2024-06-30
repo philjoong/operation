@@ -37,10 +37,17 @@ class StartPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => TimelinePage()));
-            }, child: Text('Timeline')),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                            create: (context) => StartBloc(),
+                            child: TimelinePage()),
+                      ));
+                },
+                child: Text('Timeline')),
             BlocBuilder<StartBlocDI, int>(
                 builder: (context, state) => Text(state.toString())),
             BlocSelector<StartSelectorBloc, StartSelectorState, bool>(
@@ -56,10 +63,7 @@ class StartPage extends StatelessWidget {
               listener: (context, state) {
                 _showMessage(context);
               },
-              child: Text(context
-                  .read<StartBlocDI>()
-                  .state
-                  .toString()),
+              child: Text(context.read<StartBlocDI>().state.toString()),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
