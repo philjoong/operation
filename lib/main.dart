@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:operation/init_dependencies.dart';
 
 import 'component/homdPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Firebase.initializeApp();
+  initDependencies();
   await Hive.initFlutter();
   var box = await Hive.openBox('databox');
   // final _mybox = Hive.box("databox");

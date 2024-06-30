@@ -2,10 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:operation/blocs/startSelectorBloc.dart';
+import 'package:operation/blocs/strategyBloc.dart';
 import 'package:operation/component/timelinePage.dart';
+import 'package:operation/init_dependencies.dart';
 import 'package:operation/repository/startRepository.dart';
 import '../blocs/startBloc.dart';
 import '../blocs/startBlocDI.dart';
+import '../cases/strategyUseCase.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -43,7 +46,7 @@ class StartPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => BlocProvider(
-                            create: (context) => StartBloc(),
+                            create: (context) => StrategyBloc(strategyUseCase: getIt<StrategyUseCase>()),
                             child: TimelinePage()),
                       ));
                 },
