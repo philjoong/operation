@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:operation/blocs/auth_bloc.dart';
 import 'package:operation/blocs/startSelectorBloc.dart';
 import 'package:operation/blocs/strategyBloc.dart';
 import 'package:operation/component/timelinePage.dart';
@@ -67,6 +68,43 @@ class StartPage extends StatelessWidget {
                 _showMessage(context);
               },
               child: Text(context.read<StartBlocDI>().state.toString()),
+            ),
+            
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is AuthInitial) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => context.read<AuthBloc>().add(SignInWithGoogle()),
+                        child: Text('Sign In with Google'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => context.read<AuthBloc>().add(SignInWithApple()),
+                        child: Text('Sign In with Apple'),
+                      ),
+                    ],
+                  );
+                }
+                else if (state is AuthLoading) {
+                  return CircularProgressIndicator();
+                } else if (state is AuthAuthenticated) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Hello, ${state.user.name}'),
+                      ElevatedButton(
+                        onPressed: () => context.read<AuthBloc>().add(SignOut()),
+                        child: Text('Sign Out'),
+                      ),
+                    ],
+                  );
+                } else if (state is AuthError) {
+                  return Text('Error: ${state.message}');
+                }
+                return Container();
+              }
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

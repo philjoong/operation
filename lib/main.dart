@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:operation/blocs/auth_bloc.dart';
 import 'package:operation/init_dependencies.dart';
 
 import 'component/homdPage.dart';
@@ -31,7 +33,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: BlocProvider(
+        create: (context) => getIt<AuthBloc>(),
+        child: const MyHomePage(),
     );
   }
 }
