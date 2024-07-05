@@ -47,6 +47,14 @@ class FirestoreDataSource {
   Future<void> addUser(UserModel user) async {
     await firestore.collection('users').doc(user.id).set(user.toJson());
   }
+
+  Future<TacticsModel?> getUserTactics(String userId) async {
+    final doc = await firestore.collection('tactics').doc(userId).get();
+    if (doc.exists) {
+      return TacticsModel.fromJson(doc.data()!);
+    }
+    return null;
+  }
 }
 
 class FirebaseAuthDataSource {
