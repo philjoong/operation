@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:operation/blocs/tactical_board_bloc.dart';
 import '../model/user.dart';
 import '../repository/user_repository.dart';
 
@@ -30,14 +31,16 @@ class AuthError extends AuthState {
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserRepository userRepository;
+  final TacticalBoardBloc tacticalBoardBloc;
 
-  AuthBloc(this.userRepository) : super(AuthInitial()) {
+  AuthBloc(this.userRepository, this.tacticalBoardBloc) : super(AuthInitial()) {
     on<SignInWithGoogle>((event, emit) async {
       emit(AuthLoading());
       try {
-        final user = await userRepository.getUser();
+        final user = await userRepository.getUserWithGoogle();
         if (user != null) {
           emit(AuthAuthenticated(user));
+          tacticalBoardBloc.add(LoadTacticalBoard(user.id));
         } else {
           emit(AuthError("Google sign-in failed"));
         }
@@ -49,7 +52,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInWithApple>((event, emit) async {
       emit(AuthLoading());
       try {
-        // Apple 로그인 로직 추가
+        final user = await userRepository.getUserWithApple();
+        if (user != null) {
+          emit(AuthAuthenticated(user));
+          tacticalBoardBloc.add(LoadTacticalBoard(user.id));
+        } else {
+          emit(AuthError("Apple sign-in failed"));
+        }
       } catch (e) {
         emit(AuthError(e.toString()));
       }
@@ -58,7 +67,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOut>((event, emit) async {
       emit(AuthLoading());
       try {
-        // 로그아웃 로직 추가
+        await userRepository.signOut();
+        emit(AuthInitial());
       } catch (e) {
         emit(AuthError(e.toString()));
       }

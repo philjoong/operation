@@ -1,3 +1,5 @@
+import 'package:operation/blocs/auth_bloc.dart';
+import 'package:operation/model/tactics_model.dart';
 import '../model/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -5,18 +7,20 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class UserRepository {
-  Future<User?> getUser();
+  Future<UserModel?> getUserWithGoogle();
+  Future<UserModel?> getUserWithApple();
+  Future<List<UnitPosition>> getUserTactics(String userId);
+  Future<void> signOut();
 }
 
 class UserRepositoryImpl implements UserRepository {
   final FirebaseAuthDataSource authDataSource;
   final FirestoreDataSource firestoreDataSource;
 
-  UserRepositoryImpl(this.authDataSource, this.firestoreDataSource);
+  UserRepositoryImpl({required this.firestoreDataSource, required this.authDataSource});
 
   @override
-  Future<User?> getUser() async {
-    // 예제에서는 Google 로그인으로만 설명
+  Future<UserModel?> getUserWithGoogle() async {
     final user = await authDataSource.signInWithGoogle();
     if (user != null) {
       final userData = await firestoreDataSource.getUser(user.id);
@@ -28,6 +32,31 @@ class UserRepositoryImpl implements UserRepository {
       }
     }
     return null;
+  }
+
+  @override
+  Future<UserModel?> getUserWithApple() async {
+    final user = await authDataSource.signInWithApple();
+    if (user != null) {
+      final userData = await firestoreDataSource.getUser(user.id);
+      if (userData != null) {
+        return userData;
+      } else {
+        await firestoreDataSource.addUser(user);
+        return user;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<List<UnitPosition>> getUserTactics(String userId) async {
+    return firestoreDataSource.getUserTactics(userId);
+  }
+
+  @override
+  Future<void> signOut() async {
+    await authDataSource.signOut();
   }
 }
 
@@ -48,14 +77,26 @@ class FirestoreDataSource {
     await firestore.collection('users').doc(user.id).set(user.toJson());
   }
 
-  Future<TacticsModel?> getUserTactics(String userId) async {
-    final doc = await firestore.collection('tactics').doc(userId).get();
-    if (doc.exists) {
-      return TacticsModel.fromJson(doc.data()!);
+  Future<List<UnitPosition>> getUserTactics(String userId, {String? tacticId}) async {
+    final querySnapshot;
+    if (tacticId != null) {
+      querySnapshot = await firestore.collection('tactics')
+          .where('userId', isEqualTo: userId)
+          .where('tacticId', isEqualTo: tacticId)
+          .get();
+    } else {
+      querySnapshot = await firestore.collection('tactics')
+          .where('userId', isEqualTo: userId)
+          .get();
     }
-    return null;
+
+    if (querySnapshot.docs.isNotEmpty) {
+      return querySnapshot.docs.map((doc) => UnitPosition.fromJson(doc.data())).toList();
+    }
+    return [];
   }
 }
+
 
 class FirebaseAuthDataSource {
   final firebase_auth.FirebaseAuth firebaseAuth;
@@ -102,5 +143,6 @@ class FirebaseAuthDataSource {
   Future<void> signOut() async {
     await firebaseAuth.signOut();
     await googleSignIn.signOut();
+    // 애플 로그인은 별도의 로그아웃 필요 없음 (애플 OAuth 제한사항)
   }
 }

@@ -1,77 +1,48 @@
 // models/tactics_model.dart
 import 'package:equatable/equatable.dart';
-
-class TacticsModel extends Equatable {
-  final List<UnitPosition> units;
-  final BallPosition ball;
-
-  TacticsModel({required this.units, required this.ball});
-
-  factory TacticsModel.fromJson(Map<String, dynamic> json) {
-    final unitsJson = json['units'] as List<dynamic>;
-    final units = unitsJson.map((e) => UnitPosition.fromJson(e)).toList();
-    final ball = BallPosition.fromJson(json['ball']);
-    return TacticsModel(units: units, ball: ball);
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'units': units.map((e) => e.toJson()).toList(),
-      'ball': ball.toJson(),
-    };
-  }
-
-  @override
-  List<Object> get props => [units, ball];
-}
+import 'package:operation/model/player.dart';
 
 class UnitPosition extends Equatable {
-  final int id;
-  final double x;
-  final double y;
+  int id;
+  List<Player> players;
 
-  UnitPosition({required this.id, required this.x, required this.y});
+  UnitPosition({required this.id, required this.players});
 
   factory UnitPosition.fromJson(Map<String, dynamic> json) {
     return UnitPosition(
       id: json['id'],
-      x: json['x'],
-      y: json['y'],
+      players: json['players'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'x': x,
-      'y': y,
+      'players': players,
     };
   }
 
   @override
-  List<Object> get props => [id, x, y];
+  List<Object> get props => [id, players];
 }
 
-class BallPosition extends Equatable {
-  final double x;
-  final double y;
+class TacticsModel extends Equatable {
+  final List<UnitPosition> units;
 
-  BallPosition({required this.x, required this.y});
+  TacticsModel({required this.units});
 
-  factory BallPosition.fromJson(Map<String, dynamic> json) {
-    return BallPosition(
-      x: json['x'],
-      y: json['y'],
-    );
+  factory TacticsModel.fromJson(Map<String, dynamic> json) {
+    final unitsJson = json['units'] as List<dynamic>;
+    final units = unitsJson.map((e) => UnitPosition.fromJson(e)).toList();
+    return TacticsModel(units: units);
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'x': x,
-      'y': y,
+      'units': units.map((e) => e.toJson()).toList(),
     };
   }
 
   @override
-  List<Object> get props => [x, y];
+  List<Object> get props => [units];
 }

@@ -1,22 +1,38 @@
 import 'package:equatable/equatable.dart';
 import 'package:bloc/bloc.dart';
+import 'package:operation/model/tactics_model.dart';
+import 'package:operation/model/user.dart';
+import 'package:operation/repository/user_repository.dart';
 
 
 class TacticalBoardBloc extends Bloc<TacticalBoardEvent, TacticalBoardState> {
-  TacticalBoardBloc() : super(TacticalBoardInitial());
+  final UserRepository userRepository;
+
+  TacticalBoardBloc(this.userRepository) : super(TacticalBoardInitial());
 
   @override
   Stream<TacticalBoardState> mapEventToState(TacticalBoardEvent event) async* {
     if (event is LoadTacticalBoard) {
-      yield* _mapLoadTacticalBoardToState();
+      yield* _mapLoadTacticalBoardToState(event);
     }
-    // Handle other events
   }
 
-  Stream<TacticalBoardState> _mapLoadTacticalBoardToState() async* {
-    // Simulate data fetching
-    await Future.delayed(Duration(seconds: 2));
-    yield TacticalBoardLoaded('Tactical Board Data');
+  Stream<TacticalBoardState> _mapLoadTacticalBoardToState(LoadTacticalBoard event) async* {
+    yield TacticalBoardInitial();
+
+    final userId = event;
+    if (userId != null) {
+      final tacticsList = await userRepository.getUserTactics(userId as String);
+      if (tacticsList.isNotEmpty) {
+        final unitPositionSequence = tacticsList.first;
+        yield TacticalBoardLoaded(unitPositionSequence as List<UnitPosition>);
+      } else {
+        // Handle case where no tactics are available
+        yield TacticalBoardError('No Tactical Board Data');
+      }
+    } else {
+      yield TacticalBoardError('Failed to load user data');
+    }
   }
 }
 
@@ -27,7 +43,14 @@ abstract class TacticalBoardEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadTacticalBoard extends TacticalBoardEvent {}
+class LoadTacticalBoard extends TacticalBoardEvent {
+  final String userId;
+
+  const LoadTacticalBoard(this.userId);
+
+  @override
+  List<Object> get props => [userId];
+}
 
 abstract class TacticalBoardState extends Equatable {
   const TacticalBoardState();
@@ -39,10 +62,19 @@ abstract class TacticalBoardState extends Equatable {
 class TacticalBoardInitial extends TacticalBoardState {}
 
 class TacticalBoardLoaded extends TacticalBoardState {
-  final String data;
+  final List<UnitPosition> unitPositionSequence;
 
-  const TacticalBoardLoaded(this.data);
+  const TacticalBoardLoaded(this.unitPositionSequence);
   
   @override
-  List<Object> get props => [data];
+  List<Object> get props => [unitPositionSequence];
+}
+
+class TacticalBoardError extends TacticalBoardState {
+  final String message;
+
+  const TacticalBoardError(this.message);
+
+  @override
+  List<Object> get props => [message];
 }
