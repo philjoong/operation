@@ -1,19 +1,19 @@
 class User {
   final String id;
-  final String name;
+  final String displayName;
   final String email;
 
-  User({required this.id, required this.name, required this.email});
+  User({required this.id, required this.displayName, required this.email});
 }
 
 class UserModel extends User {
-  UserModel({required String id, required String name, required String email})
-      : super(id: id, name: name, email: email);
+  UserModel({required String id, required String displayName, required String email})
+      : super(id: id, displayName: displayName, email: email);
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
-      name: json['name'],
+      displayName: json['displayName'],
       email: json['email'],
     );
   }
@@ -21,7 +21,7 @@ class UserModel extends User {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'name': displayName,
       'email': email,
     };
   }

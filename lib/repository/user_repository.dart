@@ -5,11 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hive/hive.dart';
 
 abstract class UserRepository {
   Future<UserModel?> getUserWithGoogle();
   Future<UserModel?> getUserWithApple();
   Future<List<UnitPosition>> getUserTactics(String userId);
+  Future<void> saveUserTactics(UnitPosition players);
   Future<void> signOut();
 }
 
@@ -58,6 +60,16 @@ class UserRepositoryImpl implements UserRepository {
   Future<void> signOut() async {
     await authDataSource.signOut();
   }
+  
+  @override
+  Future<void> saveUserTactics(UnitPosition players) async {
+    final currentUser = await authDataSource.getCurrentUser();
+    if (currentUser != null) {
+      await firestoreDataSource.saveUserTactics(currentUser.id, players);
+    } else {
+      throw Exception('No user is currently signed in');
+    }
+  }
 }
 
 class FirestoreDataSource {
@@ -94,6 +106,10 @@ class FirestoreDataSource {
       return querySnapshot.docs.map((doc) => UnitPosition.fromJson(doc.data())).toList();
     }
     return [];
+  }
+
+  Future<void> saveUserTactics(String userId, UnitPosition players) async {
+    await firestore.collection('tactics').doc(userId).set(players.toJson());
   }
 }
 
@@ -144,5 +160,13 @@ class FirebaseAuthDataSource {
     await firebaseAuth.signOut();
     await googleSignIn.signOut();
     // 애플 로그인은 별도의 로그아웃 필요 없음 (애플 OAuth 제한사항)
+  }
+
+  UserModel? getCurrentUser() {
+    final user = firebaseAuth.currentUser;
+    if (user != null) {
+      return UserModel(id: user.uid, displayName: user.displayName ?? "", email: user.email ?? "");
+    }
+    return null;
   }
 }
